@@ -1,6 +1,6 @@
 # arm9select
 This is a very simple A9LH binary which allows you to hold down any button on start to select the file you want to boot, files should go into /arm9select
-and follow the pattern of a.bin, b.bin, start.bin etc. If no buttons are being pressed it will use default.bin. If you want any of these files to also have screen backlight enabled, create files in the /arm9select folder in
+and follow the pattern of a.bin, b.bin, start.bin etc. If no buttons are being pressed or the file of the button you hold is not found it will use default.bin. If you want any of these files to also have screen backlight enabled, create files in the /arm9select folder in
 the pattern of a_bl, b_bl, start_bl etc. Again, if no buttons are being pressed it will check for default_bl. This project was made with the expectation of using my arm9loaderhax fork which does not enable the backlights
 by default, you can find it over on https://github.com/FIX94/arm9loaderhax.
 
