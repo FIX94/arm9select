@@ -8,12 +8,16 @@
 #define PAYLOAD_SIZE		0x00100000
 #define A11_PAYLOAD_LOC     0x1FFF8000  //keep in mind this needs to be changed in the ld script for screen_init too
 
+//used to detect if we are cold booting
+#define CFG_BOOTENV			0x10010000
+#define COLDBOOT			0
+
 extern u8 screen_init_bin[];
 extern u32 screen_init_bin_size;
 
 void ownArm11()
 {
-    memcpy((void*)A11_PAYLOAD_LOC, screen_init_bin, screen_init_bin_size);
+	memcpy((void*)A11_PAYLOAD_LOC, screen_init_bin, screen_init_bin_size);
 	*((u32*)0x1FFFFFF8) = A11_PAYLOAD_LOC;
 	for(int i = 0; i < 0x80000; i++)
 	{
@@ -21,6 +25,11 @@ void ownArm11()
 	}
 	for(volatile unsigned int i = 0; i < 0xF; ++i);
 	while(*(volatile uint32_t *)0x1FFFFFF8 != 0);
+}
+
+static inline void jump()
+{
+	((void (*)())PAYLOAD_ADDRESS)();
 }
 
 void jumpAndTryEnableBL(char *file)
@@ -31,7 +40,7 @@ void jumpAndTryEnableBL(char *file)
 		ownArm11(); //enable screen backlight
 		f_close(&f);
 	}
-	((void (*)())PAYLOAD_ADDRESS)();
+	jump();
 }
 
 int tryLoadFile(char *file)
@@ -78,8 +87,13 @@ int main()
 		else if((padInput & (1<<11)) && tryLoadFile("/arm9select/y.bin"))
 			jumpAndTryEnableBL("/arm9select/y_bl");
 		else if(tryLoadFile("/arm9select/default.bin"))
-			jumpAndTryEnableBL("/arm9select/default_bl");
+		{
+			if(*(vu8*)CFG_BOOTENV == COLDBOOT)
+				jumpAndTryEnableBL("/arm9select/default_bl");
+			else //dont enable backlight again on soft reset
+				jump();
+		}
 	}
 	i2cWriteRegister(I2C_DEV_MCU, 0x20, (u8)(1<<0));
-    return 0;
+	return 0;
 }
